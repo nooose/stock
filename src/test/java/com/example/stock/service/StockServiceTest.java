@@ -1,6 +1,7 @@
 package com.example.stock.service;
 
 import com.example.stock.domain.Stock;
+import com.example.stock.facade.NamedLockStockFacade;
 import com.example.stock.facade.OptimisticLockStockFacade;
 import com.example.stock.repository.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,8 @@ class StockServiceTest {
     private PessimisticLockStockService pessimisticLockStockService;
     @Autowired
     private OptimisticLockStockFacade optimisticLockStockFacade;
+    @Autowired
+    private NamedLockStockFacade namedLockStockFacade;
 
     @Autowired
     private StockRepository stockRepository;
@@ -82,6 +85,20 @@ class StockServiceTest {
                 optimisticLockStockFacade.decrease(1L, 1L);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            } finally {
+                latch.countDown();
+            }
+        }, latch);
+    }
+
+    @DisplayName("동시에 재고 감소 100개 요청 named lock")
+    @Test
+    void decreaseStockNamedLock() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(100);
+
+        동시에_요청(() -> {
+            try {
+                namedLockStockFacade.decrease(1L, 1L);
             } finally {
                 latch.countDown();
             }
