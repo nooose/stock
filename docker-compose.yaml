@@ -9,3 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: 1234
     volumes:
       - ./database/init:/docker-entrypoint-initdb.d
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
