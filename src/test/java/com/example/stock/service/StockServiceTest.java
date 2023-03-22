@@ -4,6 +4,7 @@ import com.example.stock.domain.Stock;
 import com.example.stock.facade.LettuceLockStockFacade;
 import com.example.stock.facade.NamedLockStockFacade;
 import com.example.stock.facade.OptimisticLockStockFacade;
+import com.example.stock.facade.RedissonLockStockFacade;
 import com.example.stock.repository.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +31,8 @@ class StockServiceTest {
     private NamedLockStockFacade namedLockStockFacade;
     @Autowired
     private LettuceLockStockFacade lettuceLockStockFacade;
+    @Autowired
+    private RedissonLockStockFacade redissonLockStockFacade;
     @Autowired
     private StockRepository stockRepository;
 
@@ -117,6 +120,20 @@ class StockServiceTest {
                 lettuceLockStockFacade.decrease(1L, 1L);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            } finally {
+                latch.countDown();
+            }
+        }, latch);
+    }
+
+    @DisplayName("동시에 재고 감소 100개 요청 redisson lock")
+    @Test
+    void decreaseStockRedissonLock() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(100);
+
+        동시에_요청(() -> {
+            try {
+                redissonLockStockFacade.decrease(1L, 1L);
             } finally {
                 latch.countDown();
             }
